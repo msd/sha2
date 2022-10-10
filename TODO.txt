@@ -1,0 +1,4 @@
+SHA-256 correctness
+Windows conan script
+SHA-224 implementation (very easy to implement)
+SHA-384 and SHA-512 
