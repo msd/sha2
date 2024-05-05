@@ -8,7 +8,6 @@
 
 namespace steve::bits
 {
-
     std::string read_file(std::string file_path);
 
     std::vector<std::byte> read_file_bytes(std::string file_path);
