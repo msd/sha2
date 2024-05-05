@@ -1,6 +1,18 @@
+
+#include <cassert>
+
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_all.hpp>
 
 #include "utils.hpp"
+#include "hashing.hpp"
+
+using namespace steve::algorithms;
+using namespace steve::bits;
+
+using std::cend;
+using std::cbegin;
+using std::array;
 
 TEST_CASE ( "block count is correct", "[block_count]" )
 {
@@ -169,5 +181,45 @@ TEST_CASE ( "many from little endian" )
         array<uint32_t, 2> got;
         many_from_little_endian<uint32_t>(begin(x), end(x), got.data());
         REQUIRE ( expected == got );
+    }
+}
+
+TEST_CASE( "pad block", "[pad_block]")
+{
+    namespace ranges = std::ranges;
+    using namespace Catch::Matchers;
+
+    auto is_zero = [] (byte x) -> bool { return x == byte{0}; };
+
+    SECTION ( "empty message" )
+    {
+        vector<byte> message;
+        auto padded = pad_block(cbegin(message), cend(message), message.size());
+        REQUIRE ( padded[0] == byte{0x80} );
+        auto all_but_first = ranges::subrange(cbegin(padded) + 1, cend(padded));
+
+        REQUIRE_THAT ( all_but_first, AllMatch(Predicate<byte>( is_zero )) );
+    }
+
+    SECTION ( "terminal block" )
+    {
+        vector<byte> message{
+            byte(0x10),
+            byte(0x20),
+            byte(0x30),
+            byte(0x40)
+        };
+
+        assert(message.size() < BLOCK_ROLLOVER_BYTES);
+
+        auto padded = pad_block(cbegin(message), cend(message), message.size());
+
+        auto block_message = ranges::subrange(cbegin(padded), cbegin(padded) + message.size());
+        auto block_pad_first = *(cbegin(block_message) + message.size());
+        auto block_pad_zeros = ranges::subrange(cend(block_message) + 1, cbegin(padded) + BLOCK_ROLLOVER_BYTES);
+        REQUIRE ( ranges::equal(block_message, ranges::subrange(message)) );
+        REQUIRE ( block_pad_first == byte{0x80} );
+        REQUIRE_THAT ( block_pad_zeros, AllMatch(Predicate<byte>(is_zero)) );
+
     }
 }

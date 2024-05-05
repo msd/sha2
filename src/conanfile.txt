@@ -1,6 +1,7 @@
 [requires]
-catch2/3.1.0
+catch2/3.5.4
+msd-cpp-utils/0.0.3
 
 [generators]
-cmake_find_package
-cmake_paths
+CMakeDeps
+CMakeToolchain
