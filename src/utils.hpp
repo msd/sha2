@@ -1,6 +1,7 @@
 #ifndef B9B475FE_C6E6_4A9F_98B5_A506D530305D
 #define B9B475FE_C6E6_4A9F_98B5_A506D530305D
 
+#include <iomanip>
 #include <ranges>
 #include <sstream>
 #include <string>
@@ -19,6 +20,11 @@ namespace steve::bits
             x = f(x);
         }
         return x;
+    }
+
+    template <typename... Args> auto constexpr make_array(Args... args)
+    {
+        return std::array<std::common_type_t<Args...>, sizeof...(Args)>{args...};
     }
 
     struct hex_bytes_params
@@ -41,14 +47,12 @@ namespace steve::bits
         static auto const new_stream = []
         {
             std::stringstream the_new_stream;
-            the_new_stream.setf(std::stringstream::hex, std::stringstream::basefield);
-            the_new_stream.fill('0');
+            the_new_stream << std::right << std::hex << std::setfill('0');
             return the_new_stream;
         };
 
         auto stream = new_stream();
-        stream.width(sizeof(Integer) * 2);
-        stream << static_cast<size_t>(x);
+        stream << std::setw(sizeof(Integer) * 2) << static_cast<size_t>(x);
         return stream.str();
     }
 
@@ -87,8 +91,7 @@ namespace steve::bits
         static auto const new_stream = []
         {
             std::stringstream the_new_stream;
-            the_new_stream.setf(std::stringstream::hex, std::stringstream::basefield);
-            the_new_stream.fill('0');
+            the_new_stream << std::right << std::hex << std::setfill('0');
             return the_new_stream;
         };
         std::vector<std::string> lines;
@@ -99,7 +102,7 @@ namespace steve::bits
         for (std::byte b : v)
         {
             ++count_in_line;
-            stream.width(2);
+            stream << std::setw(2);
             stream << static_cast<int>(b);
             if (count_in_line == MAX_BYTES_PER_LINE)
             {

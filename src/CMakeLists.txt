@@ -51,9 +51,6 @@ add_library(deps INTERFACE)
 # find_package(Boost REQUIRED COMPONENTS system regex locale)
 # target_link_libraries(deps INTERFACE Boost::system Boost::regex Boost::locale ws2_32 mswsock)
 
-
-# add_compile_options(-std=c++23)
-
 find_package(msd-cpp-utils)
 
 
@@ -154,7 +151,7 @@ if(BUILD_TESTS)
     # LINK TESTING LIBRARY
     find_package(Catch2 3 REQUIRED)
 
-    add_executable(tests tests.cpp hashing.cpp utils.cpp)
+    add_executable(tests tests.cpp utils.cpp)
     target_link_libraries(tests PUBLIC test_deps common Catch2::Catch2)
 
     set_target_properties(
@@ -169,7 +166,7 @@ if(BUILD_TESTS)
 
 endif()
 
-add_executable(mysha main.cpp hashing.cpp utils.cpp)
+add_executable(mysha main.cpp utils.cpp)
 target_link_libraries(mysha PUBLIC common)
 
 set_target_properties(

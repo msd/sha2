@@ -26,5 +26,7 @@ Diagnostics:
       - "readability-uppercase-literal-suffix"
       - "readability-identifier-length"
       - "*-redundant-member-init"
+      - "*magic*number*"
+      - "*array*index*"
 Hover:
   ShowAKA: No

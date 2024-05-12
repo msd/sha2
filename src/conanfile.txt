@@ -1,6 +1,6 @@
 [requires]
 catch2/3.5.4
-msd-cpp-utils/0.0.3
+msd-cpp-utils/0.0.4
 
 [generators]
 CMakeDeps
