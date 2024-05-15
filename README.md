@@ -1,6 +1,6 @@
 # SHA-256 implementation
 
-This is an implementation of the hashing algorithm SHA-256. Written in C++ and using C++23 features.
+This is my implementation of the hashing algorithm SHA-256. Written in C++ and using C++23 features.
 This is a learning exercise and has helped me better understard C++ templates as well as learning 
 new features in C++. This program is not intended for any serious use nor
 does it have security in mind.

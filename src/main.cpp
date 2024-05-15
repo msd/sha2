@@ -50,7 +50,10 @@ multi_hash_result multi_hash(std::vector<std::byte> data)
     using namespace steve::algorithms;
     auto sha256 = sha256::Hash{};
     sha256.update(data);
-    return multi_hash_result{.sha_256 = sha256.digest()};
+
+    sha512::Hash sha512{};
+    sha512.update(data);
+    return multi_hash_result{.sha_256 = sha256.digest(), .sha_512 = sha512.digest()};
 }
 
 struct expected_data
