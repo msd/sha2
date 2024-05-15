@@ -84,7 +84,7 @@ target_compile_options(common INTERFACE
     $<$<CXX_COMPILER_ID:GNU>:-Wformat-y2k>
     $<$<CXX_COMPILER_ID:GNU>:-Wimport>
     $<$<CXX_COMPILER_ID:GNU>:-Winit-self>
-    $<$<CXX_COMPILER_ID:GNU>:-Winline>
+    # $<$<CXX_COMPILER_ID:GNU>:-Winline>
     $<$<CXX_COMPILER_ID:GNU>:-Winvalid-pch>
     # $<$<CXX_COMPILER_ID:GNU>:-Wlong-long>
     $<$<CXX_COMPILER_ID:GNU>:-Wmissing-field-initializers>
@@ -151,8 +151,8 @@ if(BUILD_TESTS)
     # LINK TESTING LIBRARY
     find_package(Catch2 3 REQUIRED)
 
-    add_executable(tests tests.cpp utils.cpp)
-    target_link_libraries(tests PUBLIC test_deps common Catch2::Catch2)
+    add_executable(tests tests.cpp)
+    target_link_libraries(tests PUBLIC common Catch2::Catch2WithMain)
 
     set_target_properties(
         tests

@@ -1,18 +1,13 @@
 #ifndef C3F8C015_E7B0_4543_AB0C_6D83AD5DF3C2
 #define C3F8C015_E7B0_4543_AB0C_6D83AD5DF3C2
 
-#include <algorithm>
-#include <array>
 #include <bit>
-#include <climits>
-#include <corecrt.h>
 #include <cstdint>
 #include <iterator>
 #include <ranges>
 #include <span>
-#include <vector>
 
-#include <msd_utils/endian.hpp>
+#include <msd_utils/endian_containers.hpp>
 
 template <std::integral Integer = int> Integer const constexpr SHA256_DIGEST_LEN = 32;
 template <std::integral Integer = int> Integer const constexpr SHA384_DIGEST_LEN = 48;
@@ -20,6 +15,13 @@ template <std::integral Integer = int> Integer const constexpr SHA512_DIGEST_LEN
 
 namespace steve::algorithms
 {
+    // using uint128_t = unsigned __int128; // ONLY WORKS ON GCC and CLANG
+
+    namespace sha224
+    {
+        // todo
+    } // namespace sha224
+
     namespace sha256
     {
         template <typename I = unsigned> auto const constexpr DIGEST_LENGTH = SHA256_DIGEST_LEN<I>;
@@ -27,7 +29,7 @@ namespace steve::algorithms
         using unit = uint32_t;
         // message block size is 512 bits
         static size_t const constexpr BLOCK_SIZE_BITS = 512;
-        static size_t const constexpr BLOCK_SIZE = BLOCK_SIZE_BITS / 8;
+        static size_t const constexpr BLOCK_SIZE = BLOCK_SIZE_BITS / CHAR_BIT;
         static size_t const constexpr UNITS_PER_BLOCK =
             BLOCK_SIZE / sizeof(unit); // how many units in a 512-bit block
         using block_t = std::array<unit, UNITS_PER_BLOCK>;
@@ -35,7 +37,7 @@ namespace steve::algorithms
 
         // cipher state size is 256 bits
         static size_t const constexpr STATE_SIZE_BITS = 256;
-        static size_t const constexpr STATE_SIZE = STATE_SIZE_BITS / 8;
+        static size_t const constexpr STATE_SIZE = STATE_SIZE_BITS / CHAR_BIT;
         static size_t const constexpr STATE_UNIT_SIZE = STATE_SIZE / sizeof(unit);
 
         using state_t = std::array<unit, STATE_UNIT_SIZE>;
@@ -138,7 +140,7 @@ namespace steve::algorithms
             byte_block_t buffer{};
             byte_block_t::iterator buffer_pos{buffer.begin()};
             state_t state{H_init_256};
-            padding_tail_type message_size{0};
+            padding_tail_type message_size{0}; // in bytes
             [[nodiscard]] auto buffer_remaining() const
             {
                 return std::distance((byte_block_t::const_iterator)buffer_pos, buffer.cend());
@@ -231,7 +233,10 @@ namespace steve::algorithms
                     *(tmp_pos++) = std::byte{0x80};
                     // pad remaining zeros
                     auto padding_tail_begin = std::prev(tmp_buffer.end(), PADDING_TAIL_SIZE);
-                    std::fill(tmp_pos, padding_tail_begin, std::byte{0});
+                    if (std::distance(tmp_pos, padding_tail_begin) > 0)
+                    {
+                        std::fill(tmp_pos, padding_tail_begin, std::byte{0});
+                    }
                     // add padding tail (size of message mod 2^64)
                     msd::utils::endian::to_big_endian(message_size * CHAR_BIT, padding_tail_begin);
 
@@ -278,6 +283,26 @@ namespace steve::algorithms
     {
         template <typename I = unsigned> auto const constexpr DIGEST_LENGTH = SHA512_DIGEST_LEN<I>;
         using digest_t = std::array<std::byte, DIGEST_LENGTH<>>;
+
+        using unit = uint64_t;
+        // message block size is 512 bits
+        static size_t const constexpr BLOCK_SIZE_BITS = 1024;
+        static size_t const constexpr BLOCK_SIZE = BLOCK_SIZE_BITS / CHAR_BIT;
+        static size_t const constexpr UNITS_PER_BLOCK =
+            BLOCK_SIZE / sizeof(unit); // how many units in a 512-bit block
+        using block_t = std::array<unit, UNITS_PER_BLOCK>;
+        using byte_block_t = std::array<std::byte, BLOCK_SIZE>;
+
+        // cipher state size is 256 bits
+        static size_t const constexpr STATE_SIZE_BITS = 256;
+        static size_t const constexpr STATE_SIZE = STATE_SIZE_BITS / CHAR_BIT;
+        static size_t const constexpr STATE_UNIT_SIZE = STATE_SIZE / sizeof(unit);
+
+        using state_t = std::array<unit, STATE_UNIT_SIZE>;
+
+        // holds the data appended at the last block of the message
+        using padding_tail_type = uint64_t;
+        size_t const constexpr PADDING_TAIL_SIZE = sizeof(padding_tail_type);
     } // namespace sha512
 
 } // namespace steve::algorithms
