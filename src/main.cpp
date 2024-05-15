@@ -1,12 +1,12 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
-#include <iterator>
 #include <ranges>
 #include <span>
 #include <string_view>
 
 #include <msd_utils/endian.hpp>
+#include <msd_utils/endian_containers.hpp>
 
 #include "hashing.hpp"
 #include "utils.hpp"
@@ -146,6 +146,7 @@ void test_suite()
     std::cout << "=== END TEST SUITE ===\n";
 }
 
+/* runs the tests */
 int main_throw(std::vector<std::string_view> const &args)
 {
     test_suite();
@@ -192,6 +193,7 @@ static auto valid_args(int argc, char **argv)
     return args;
 }
 
+/* calculates the hash of each of the given arguments */
 int main_hash_arguments(std::vector<std::string_view> args)
 {
     if (args.size() < 2)
@@ -202,10 +204,10 @@ int main_hash_arguments(std::vector<std::string_view> args)
 
     for (auto arg : args | std::ranges::views::drop(1))
     {
-        steve::algorithms::sha256::Hash hash{};
-        std::vector<std::byte> bytes;
-        msd::utils::endian::ranges::many_to_little_endian(arg, std::back_inserter(bytes));
+        auto const bytes =
+            msd::utils::endian::containers::many_to_little_endian_vector(arg.cbegin(), arg.cend());
 
+        steve::algorithms::sha256::Hash hash{};
         hash.update(bytes);
         std::cout << '"' << arg << "\" " << steve::bits::many_bytes_to_hex(hash.digest()) << '\n';
     }

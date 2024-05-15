@@ -1,8 +1,8 @@
 # SHA-256 implementation
 
-This is an implementation of the hashing algorithm SHA-256. Written in C++ and using C++20 features.
+This is an implementation of the hashing algorithm SHA-256. Written in C++ and using C++23 features.
 This is a learning exercise and has helped me better understard C++ templates as well as learning 
-new features released in the C++20 standard. This program is not intended for any serious use nor
+new features in C++. This program is not intended for any serious use nor
 does it have security in mind.
 
 Source: [RFC6234](https://datatracker.ietf.org/doc/html/rfc6234)
@@ -29,7 +29,11 @@ be able to just copy the commands one by one.
 
 # Run
 
-`./mysha <file-path>`
+To compute the hash of a string just pass it as an argument
+
+`./mysha <message> <message2>...`
+
+This will print out the sha256 hash of each message
 
 # TODO
 
