@@ -157,14 +157,14 @@ TEST_CASE("many from big endian")
     SECTION("4 16-bit integers")
     {
         array<uint16_t, 4> expected = {0x1234u, 0x5678u, 0x9abcu, 0xdef0u};
-        array<uint16_t, 4> got;
+        array<uint16_t, 4> got{};
         msd::utils::endian::many_from_big_endian<uint16_t>(begin(x), end(x), got.data());
         REQUIRE(expected == got);
     }
     SECTION("2 32-bit integers")
     {
         array<uint32_t, 2> expected = {0x12345678u, 0x9abcdef0u};
-        array<uint32_t, 2> got;
+        array<uint32_t, 2> got{};
         msd::utils::endian::many_from_big_endian<uint32_t>(begin(x), end(x), got.data());
         REQUIRE(expected == got);
     }
@@ -177,14 +177,14 @@ TEST_CASE("many from little endian")
     SECTION("4 16-bit integers")
     {
         array<uint16_t, 4> expected = {0x3412u, 0x7856u, 0xbc9au, 0xf0deu};
-        array<uint16_t, 4> got;
+        array<uint16_t, 4> got{};
         msd::utils::endian::many_from_little_endian<uint16_t>(begin(x), end(x), got.data());
         REQUIRE(expected == got);
     }
     SECTION("2 32-bit integers")
     {
         array<uint32_t, 2> expected = {0x78563412u, 0xf0debc9au};
-        array<uint32_t, 2> got;
+        array<uint32_t, 2> got{};
         msd::utils::endian::many_from_little_endian<uint32_t>(begin(x), end(x), got.data());
         REQUIRE(expected == got);
     }

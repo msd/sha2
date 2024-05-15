@@ -41,7 +41,8 @@ namespace steve::integer
         [[nodiscard]] auto constexpr high() const { return data_data.high; }
         // NOLINTEND(*union*access*)
 
-        constexpr uint128_t(uint64_t low_ = 0, uint64_t high_ = 0) // NOLINT(*easily*swap*)
+        // NOLINTNEXTLINE(*explicit*,*easily*swap*)
+        constexpr uint128_t(uint64_t low_ = 0, uint64_t high_ = 0)
         {
             static_assert(std::endian::native == std::endian::little ||
                               std::endian::native == std::endian::big,

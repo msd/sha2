@@ -8,7 +8,6 @@
 
 #include <msd_utils/endian.hpp>
 
-#include "extended_int.hpp"
 #include "hashing.hpp"
 #include "utils.hpp"
 
