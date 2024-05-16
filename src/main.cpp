@@ -48,12 +48,18 @@ struct multi_hash_result
 multi_hash_result multi_hash(std::vector<std::byte> data)
 {
     using namespace steve::algorithms;
-    auto sha256 = sha256::Hash{};
-    sha256.update(data);
 
-    sha512::Hash sha512{};
-    sha512.update(data);
-    return multi_hash_result{.sha_256 = sha256.digest(), .sha_512 = sha512.digest()};
+    sha256::hash hash_256{};
+    hash_256.update(data);
+
+    sha384::hash hash_384{};
+    hash_384.update(data);
+
+    sha512::hash hash_512{};
+    hash_512.update(data);
+
+    return multi_hash_result{
+        .sha_256 = hash_256.digest(), .sha_384 = hash_384.digest(), .sha_512 = hash_512.digest()};
 }
 
 struct expected_data
@@ -210,7 +216,7 @@ int main_hash_arguments(std::vector<std::string_view> args)
         auto const bytes =
             msd::utils::endian::containers::many_to_little_endian_vector(arg.cbegin(), arg.cend());
 
-        steve::algorithms::sha256::Hash hash{};
+        steve::algorithms::sha256::hash hash{};
         hash.update(bytes);
         std::cout << '"' << arg << "\" " << steve::bits::many_bytes_to_hex(hash.digest()) << '\n';
     }

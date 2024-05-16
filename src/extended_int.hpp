@@ -147,11 +147,8 @@ namespace steve::integer
         {
             auto const old_low = low();
             low() += other.low();
-            if (old_low > low())
-            {
-                ++high();
-            }
-            high() += other.high();
+            data_unit carry = old_low > low();
+            high() += other.high() + carry;
             return *this;
         }
 
@@ -166,6 +163,41 @@ namespace steve::integer
         {
             other += *this;
             return other;
+        }
+
+        auto constexpr &operator>>=(size_t n)
+        {
+            data_unit const carry_mask = (1 << n) - 1;
+            auto const unit_bits = sizeof(data_unit) * CHAR_BIT;
+            data_unit carry = (high() & carry_mask) << (unit_bits - n);
+            high() >>= n;
+            low() = carry | low() >> n;
+            return *this;
+        }
+
+        [[nodiscard]] auto constexpr operator>>(size_t n) const
+        {
+            uint128_t new_value{*this};
+            new_value >>= n;
+            return new_value;
+        }
+
+        auto constexpr &operator<<=(size_t n)
+        {
+            auto const unit_bits = sizeof(data_unit) * CHAR_BIT;
+            data_unit const carry_mask = ((1 << n) - 1)
+                                         << (unit_bits - n); // n most significant bits of low
+            data_unit carry = (low() & carry_mask) >> (unit_bits - n);
+            low() <<= n;
+            high() = high() << n | carry;
+            return *this;
+        }
+
+        [[nodiscard]] auto constexpr operator<<(size_t n) const
+        {
+            uint128_t new_value{*this};
+            new_value <<= n;
+            return new_value;
         }
 
         [[nodiscard]] auto as_units() const
