@@ -1,13 +1,14 @@
+#include <climits>
+#include <cstdint>
 #include <exception>
 #include <filesystem>
 #include <iostream>
-#include <ranges>
-#include <span>
 #include <string_view>
 
 #include <msd_utils/endian.hpp>
 #include <msd_utils/endian_containers.hpp>
 
+#include "extended_int.hpp"
 #include "hashing.hpp"
 #include "utils.hpp"
 
@@ -223,7 +224,7 @@ int main_hash_arguments(std::vector<std::string_view> args)
     return 0;
 }
 
-int main(int argc, char **argv)
+int main_2(int argc, char **argv)
 {
     auto const args = valid_args(argc, argv);
     try
@@ -244,4 +245,14 @@ int main(int argc, char **argv)
         std::cout << "ERROR: " << ex.what() << std::endl;
     }
     return -1;
+}
+
+int main()
+{
+    using steve::integer::extended_integer;
+    extended_integer<uint32_t, 4> x{0x1020};
+    decltype(x) y{0x339};
+    std::cout << "quotient  " << x.slow_div(y).to_hex(4) << '\n';
+    std::cout << "remainder " << x.slow_rem(y).to_hex(4) << '\n';
+    return 0;
 }

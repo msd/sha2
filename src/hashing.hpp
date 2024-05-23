@@ -361,8 +361,6 @@ namespace steve::algorithms
             0x67332667ffc00b31, 0x8eb44a8768581511, 0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4,
         };
         using digest_t = details::digest_t;
-
-        auto const constexpr x = details::state_t{};
     } // namespace sha384
 
     namespace sha2_algo
@@ -549,9 +547,9 @@ namespace steve::algorithms
             using sha512_algo = Algorithm<sha512_spec>;
         } // namespace impl
 
-        using sha256_algo = impl::sha256_algo;
-        using sha384_algo = impl::sha384_algo;
-        using sha512_algo = impl::sha512_algo;
+        using impl::sha256_algo;
+        using impl::sha384_algo;
+        using impl::sha512_algo;
     } // namespace sha2_algo
 
     namespace sha256
