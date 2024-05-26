@@ -1,14 +1,14 @@
 #include <climits>
-#include <cstdint>
 #include <exception>
 #include <filesystem>
+#include <ios>
 #include <iostream>
+#include <string>
 #include <string_view>
 
 #include <msd_utils/endian.hpp>
 #include <msd_utils/endian_containers.hpp>
 
-#include "extended_int.hpp"
 #include "hashing.hpp"
 #include "utils.hpp"
 
@@ -212,19 +212,30 @@ int main_hash_arguments(std::vector<std::string_view> args)
         return 1;
     }
 
+    using namespace steve::algorithms;
+
+    int i = 0;
+
     for (auto arg : args | std::ranges::views::drop(1))
     {
+        ++i;
         auto const bytes =
             msd::utils::endian::containers::many_to_little_endian_vector(arg.cbegin(), arg.cend());
 
-        steve::algorithms::sha256::hash hash{};
-        hash.update(bytes);
-        std::cout << '"' << arg << "\" " << steve::bits::many_bytes_to_hex(hash.digest()) << '\n';
+        auto hashes = multi_hash(bytes);
+
+        std::cout << i << ". \"" << arg << "\"\n"
+
+                  << "\tSHA256 " << hashes.sha_256_string(8) << "\n"
+
+                  << "\tSHA384 " << hashes.sha_384_string(8) << "\n"
+
+                  << "\tSHA512 " << hashes.sha_512_string(8) << "\n";
     }
     return 0;
 }
 
-int main_2(int argc, char **argv)
+int main(int argc, char **argv)
 {
     auto const args = valid_args(argc, argv);
     try
@@ -245,14 +256,4 @@ int main_2(int argc, char **argv)
         std::cout << "ERROR: " << ex.what() << std::endl;
     }
     return -1;
-}
-
-int main()
-{
-    using steve::integer::extended_integer;
-    extended_integer<uint32_t, 4> x{0x1020};
-    decltype(x) y{0x339};
-    std::cout << "quotient  " << x.slow_div(y).to_hex(4) << '\n';
-    std::cout << "remainder " << x.slow_rem(y).to_hex(4) << '\n';
-    return 0;
 }

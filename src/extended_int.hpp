@@ -1,18 +1,10 @@
 #ifndef AE26D0F3_C377_468F_BAAB_B7EAC672FAB4
 #define AE26D0F3_C377_468F_BAAB_B7EAC672FAB4
 
-#include <algorithm>
 #include <bit>
-#include <climits>
-#include <compare>
-#include <concepts>
+#include <cmath>
 #include <cstdint>
-#include <iterator>
-#include <limits>
 #include <ranges>
-#include <span>
-#include <stdexcept>
-#include <type_traits>
 
 #include <msd_utils/endian_containers.hpp>
 
@@ -348,7 +340,8 @@ namespace steve::integer
             {
                 auto [product, new_carry] = unsigned_checked_operations::multi(u, unit);
                 u = product + carry;
-                carry = new_carry;
+                carry = new_carry +
+                        unsigned_checked_operations::addition_would_overflow(product, carry);
             }
             return *this;
         }
@@ -358,16 +351,24 @@ namespace steve::integer
             return self_t{*this}.mult_by_unit(unit);
         }
 
-        auto constexpr operator*=(self_t other)
+        [[nodiscard]] auto constexpr operator*(self_t const &other) const
         {
+            if (*this == 1)
+            {
+                return other;
+            }
+            if (other == 1)
+            {
+                return *this;
+            }
             self_t result{};
             for (auto const &other_unit : other.units.little_const())
             {
-                result += mult_by_unit(other_unit);
+                result += mult_by_unit_const(other_unit);
             }
-            return *this = result;
+            return result;
         }
-        [[nodiscard]] auto constexpr operator*(self_t other) const { return other *= *this; }
+        auto constexpr &operator*=(self_t const &other) { return *this = *this * other; }
 
         auto constexpr &operator-=(self_t const &other)
         {
@@ -463,7 +464,7 @@ namespace steve::integer
             }
 
             auto const whole_unit_shift = n / unit_size_bits;
-            auto const inner_unit_shift = n - whole_unit_shift * unit_size_bits;
+            auto const inner_unit_shift = n % unit_size_bits;
 
             if (whole_unit_shift > Count)
             {
@@ -504,7 +505,7 @@ namespace steve::integer
         }
         [[nodiscard]] auto constexpr operator<<(int n) const { return self_t{*this} <<= n; }
 
-        [[nodiscard]] auto constexpr &operator~() const
+        [[nodiscard]] auto constexpr operator~() const
         {
             self_t new_value{*this};
             for (auto &u : new_value.units.native())
@@ -557,48 +558,31 @@ namespace steve::integer
             self_t quotient{};
             self_t remainder{};
         };
-
         [[nodiscard]] auto slow_divmod(self_t const &divisor) const
         {
             divmod_result result{.quotient = {0}, .remainder = {*this}};
-            while (result.remainder > divisor)
+            while (result.remainder >= divisor)
             {
                 result.remainder -= divisor;
                 ++result.quotient;
             }
             return result;
         }
-        auto slow_div(self_t const &other) const { return slow_divmod(other).quotient; }
-        auto slow_rem(self_t const &other) const { return slow_divmod(other).remainder; }
-
-        auto constexpr divmod(self_t const &other) { return divmod_result{}; }
-
-        double constexpr div_double(self_t const &other)
+        [[nodiscard]] auto slow_quo(self_t const &other) const
         {
-            return 0.0; // fixme
+            return slow_divmod(other).quotient;
+        }
+        [[nodiscard]] auto slow_rem(self_t const &other) const
+        {
+            return slow_divmod(other).remainder;
         }
 
-        auto constexpr &operator/=(self_t const &other)
-        {
-            if (other == zero())
-            {
-                throw std::runtime_error{"division by zero"};
-            }
-            auto it = other.units.native_const().cbegin();
-            for (auto &u : units.native())
-            {
-                if (*it != 0)
-                {
-                    u /= *it;
-                }
-                ++it;
-            }
-            return *this;
-        }
-        [[nodiscard]] auto constexpr operator/(self_t const &other) const
-        {
-            return self_t{*this} /= other;
-        }
+        auto constexpr divmod(self_t const &other) { return slow_divmod(other); }
+        [[nodiscard]] auto operator%(self_t const &other) const { return slow_rem(other); }
+        auto &operator%=(self_t const &other) { return *this = *this % slow_rem(other); }
+
+        [[nodiscard]] auto operator/(self_t const &other) const { return slow_quo(other); }
+        auto &operator/=(self_t const &other) { return *this = *this / other; }
 
         extended_integer<Unit, Count> constexpr &operator--() { return *this -= {1}; }
 
@@ -613,6 +597,187 @@ namespace steve::integer
             }
             return *this;
         }
+
+        [[nodiscard]] self_t constexpr pow(size_t n) const
+        {
+            /*
+             * x^0 = 1
+             * x^(2k) = (x^k)^2
+             * x^(2k+1) = x * (x^k)^2
+             */
+            if (n == 0)
+            {
+                return 1;
+            }
+            auto const k = pow(n / 2);
+            auto const k_sq = k * k;
+            return n % 2 == 0 ? k_sq : *this * k_sq;
+        }
+
+        /* Convert to decimal */
+        [[nodiscard]] std::string constexpr to_string() const
+        {
+
+            static auto const constexpr digit_to_char = [](unsigned digit) -> std::optional<char>
+            {
+                auto const constexpr z = static_cast<unsigned>('0');
+                if (digit > 9)
+                {
+                    return {};
+                }
+                return z + digit;
+            };
+
+            self_t const constexpr base = 10;
+            if (*this == 0)
+            {
+                return "0";
+            }
+            self_t val{*this};
+            std::vector<char> digits_reverse{};
+            while (val > 0)
+            {
+                auto const result = val.divmod(base);
+                auto const digit =
+                    static_cast<unsigned>(*result.remainder.units.little_const().cbegin());
+                auto const digit_char_opt = digit_to_char(digit);
+                if (!digit_char_opt)
+                {
+                    return "<error extended_int::to_string digit>";
+                }
+                digits_reverse.push_back(*digit_char_opt);
+                val = result.quotient;
+            }
+            if (digits_reverse.empty())
+            {
+                return "0";
+            }
+            return std::string{digits_reverse.crbegin(), digits_reverse.crend()};
+        }
+
+        template <typename Int>
+            requires(sizeof(Int) % sizeof(unit_t) == 0)
+        struct constituent_units
+        {
+            static auto const constexpr byte_count = sizeof(Int);
+            static auto const constexpr unit_count = byte_count / sizeof(unit_t);
+            template <size_t... Counts> [[nodiscard]] static auto constexpr get_impl(Unit x)
+            {
+                return std::make_tuple(get_impl(x, Counts)...);
+            }
+
+            /*
+            template <typename... Xs> struct type_list;
+            template <typename Head, typename... Tail> struct type_list<Head, Tail...>
+            {
+                using type = Head;
+                using next = type_list<Tail...>;
+            };
+            template <class Last> struct type_list<Last>
+            {
+                using type = Last;
+                using next = void;
+            };
+             */
+
+            template <size_t... ValueListCount> struct value_list;
+            template <size_t ValueListHead, size_t... ValueListTail>
+            struct value_list<ValueListHead, ValueListTail...>
+            {
+                static auto const constexpr value = ValueListHead;
+                using next = value_list<ValueListTail...>;
+            };
+            template <size_t ValueListLast> struct value_list<ValueListLast>
+            {
+                static auto const constexpr value = ValueListLast;
+                using next = void;
+            };
+
+            template <size_t NewHead, class ValueList> struct value_list_cons
+            {
+                static auto const constexpr value = NewHead;
+                using next = ValueList;
+            };
+
+            template <typename ValueList>
+            static auto const constexpr value_list_head = ValueList::value;
+
+            template <typename ValueList> using value_list_tail = typename ValueList::next;
+
+            template <typename ValueList>
+            static bool const constexpr value_list_has_next =
+                !std::same_as<value_list_tail<ValueList>, void>;
+
+            template <class ValueList> struct value_list_length;
+            template <typename ValueList>
+            static auto const constexpr value_list_length_actual =
+                value_list_length<ValueList>::value;
+            template <class ValueList>
+                requires(std::is_void_v<value_list_tail<ValueList>>)
+            struct value_list_length<ValueList>
+            {
+                static size_t const constexpr value = 1;
+            };
+            template <class ValueList>
+                requires(!std::is_void_v<value_list_tail<ValueList>>)
+            struct value_list_length<ValueList>
+            {
+                static size_t const constexpr value =
+                    value_list_length_actual<value_list_tail<ValueList>> + 1;
+            };
+
+            template <typename ValueList, size_t Value> struct value_list_append_impl;
+            template <typename ValueList, size_t Value>
+                requires(value_list_has_next<ValueList>)
+            struct value_list_append_impl<ValueList, Value>
+            {
+                using type = value_list<value_list_head<ValueList>, Value>;
+            };
+            template <typename ValueList, size_t Value>
+                requires(!value_list_has_next<ValueList>)
+            struct value_list_append_impl<ValueList, Value>
+            {
+                using type = value_list_append_impl<value_list_tail<ValueList>, Value>;
+            };
+            template <typename ValueList, size_t Value>
+            using value_list_append = value_list_append_impl<ValueList, Value>::type;
+
+            template <typename ValueListCurrent, size_t Iteration, size_t Max> struct up_to_impl
+            {
+                using type =
+                    up_to_impl<value_list_cons<Iteration, ValueListCurrent>, Iteration + 1, Max>;
+            };
+            template <typename ValueListCurrent, size_t Iteration, size_t Max>
+                requires(Iteration == Max)
+            struct up_to_impl<ValueListCurrent, Iteration, Max>
+            {
+                using type = ValueListCurrent;
+            };
+            template <size_t UpToCount>
+            using up_to = typename up_to_impl<value_list<>, 0, UpToCount>::type;
+
+            static auto get(Int x) {}
+        };
+
+        template <std::unsigned_integral FromInt> self_t from(FromInt value) {}
+
+        template <std::floating_point Floating> Floating to_floating() const
+        {
+            static auto const constexpr bit_count =
+                static_cast<Floating>(sizeof(unit_t) * CHAR_BIT);
+            size_t exponent = 0;
+            auto sum = static_cast<Floating>(0);
+            for (auto u : units.little_const())
+            {
+                sum += static_cast<Floating>(u) * std::pow(bit_count, exponent);
+                ++exponent;
+            }
+            return sum;
+        }
+
+        explicit constexpr operator float() const { return to_floating<float>(); }
+        explicit constexpr operator double() const { return to_floating<double>(); }
+        explicit constexpr operator long double() const { return to_floating<long double>(); }
 
         auto constexpr operator<=>(extended_integer<Unit, Count> const &) const = default;
 

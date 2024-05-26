@@ -29,13 +29,9 @@ Important to note that `hash::digest()` does not modify the state and if needed 
 128-bit unsigned integer with most integer operations implemented. Intenally comprised of two 64-bit integers, stored with endianess that matches the host machine's architecture.
 
 Operations supported:
-* Left / Righ shift <</>>
-* Addition +
-* Subtraction -
-* Bitwise Negation ~
-* Bitwise AND &
-* Bitwise OR | 
-* Bitwise XOR ^
+* All unsigned integer arithmetic operations (* / +)
+* All Bitwise Operations (~ & | ^ >> <<)
+* Conversion to decimal / hexadecimal
 
 Additional operations supported:
 * Convert to hexadecimal string
