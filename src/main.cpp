@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <ios>
 #include <iostream>
+#include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -13,15 +15,6 @@
 #include "utils.hpp"
 
 namespace fs = std::filesystem;
-
-/*
- * SHA224("")
- * 0x d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f
- * SHA512/224("")
- * 0x 6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4
- * SHA512/256("")
- * 0x c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a
- */
 
 struct multi_hash_result
 {
@@ -156,29 +149,22 @@ void test_suite()
     std::cout << "=== END TEST SUITE ===\n";
 }
 
-/* runs the tests */
-int main_throw(std::vector<std::string_view> const &args)
+void hash_file(std::string_view file_path)
 {
-    test_suite();
-
     using namespace steve::bits;
     using namespace steve::algorithms;
 
-    if (args.size() < 2)
-    {
-        std::cerr << "Error: No file given" << std::endl;
-        return 1;
-    }
-    std::string_view file_path{args[1]};
     if (!fs::exists(file_path))
     {
-        std::cerr << "Error: File does not exist" << std::endl;
-        return 1;
+        throw std::runtime_error{"File does not exist"};
     }
     std::cout << "File Size: " << fs::file_size(file_path) << std::endl;
-    auto message = read_file_bytes(std::string{file_path});
-
-    return 0;
+    auto const message = read_file_bytes(std::string{file_path});
+    auto const hashes = multi_hash(message);
+    std::cout << file_path << '\n'
+              << '\t' << hashes.sha_256_string() << '\n'
+              << '\t' << hashes.sha_384_string() << '\n'
+              << '\t' << hashes.sha_512_string() << '\n';
 }
 
 /// returns empty if the arugments are null or the argument count is not negative.
@@ -203,28 +189,45 @@ static auto valid_args(int argc, char **argv)
     return args;
 }
 
-/* calculates the hash of each of the given arguments */
-int main_hash_arguments(std::vector<std::string_view> args)
+struct command_line_arguments
 {
-    if (args.size() < 2)
-    {
-        std::cerr << "error: provide at least 1 argument" << std::endl;
-        return 1;
-    }
+    std::string_view program_name{};
+    std::vector<std::string> messages{};
+};
 
+template <std::ranges::range Range> auto range_to_vector(Range range)
+{
+    return std::vector(std::cbegin(range), std::cend(range));
+}
+
+static command_line_arguments parse_args(std::vector<std::string_view> args)
+{
+    if (args.empty())
+    {
+        throw std::runtime_error{"how peculiar, what are you up to?"};
+    }
+    std::string_view program_name = args.front();
+    auto messages =
+        std::ranges::views::all(args) | std::ranges::views::drop(1) |
+        std::ranges::views::transform([](std::string_view x) { return std::string{x}; });
+    return {.program_name = program_name, .messages = range_to_vector(std::move(messages))};
+}
+
+/* calculates the hash of each of the given arguments */
+int main_hash_arguments(command_line_arguments const &arguments)
+{
     using namespace steve::algorithms;
 
     int i = 0;
-
-    for (auto arg : args | std::ranges::views::drop(1))
+    for (auto const &message : arguments.messages)
     {
         ++i;
-        auto const bytes =
-            msd::utils::endian::containers::many_to_little_endian_vector(arg.cbegin(), arg.cend());
+        auto const bytes = msd::utils::endian::containers::many_to_little_endian_vector(
+            message.cbegin(), message.cend());
 
         auto hashes = multi_hash(bytes);
 
-        std::cout << i << ". \"" << arg << "\"\n"
+        std::cout << i << ". \"" << message << "\"\n"
 
                   << "\tSHA256 " << hashes.sha_256_string(8) << "\n"
 
@@ -238,22 +241,49 @@ int main_hash_arguments(std::vector<std::string_view> args)
 int main(int argc, char **argv)
 {
     auto const args = valid_args(argc, argv);
+    command_line_arguments parsed_arguments;
     try
     {
-        if (args.size() == 1)
-        {
-            test_suite();
-            std::cout << "\nTo compute the hash of a string please provide at least 1 argument.\n";
-            return 0;
-        }
-        else // NOLINT(*else-after-return)
-        {
-            return main_hash_arguments(args);
-        }
+        parsed_arguments = parse_args(args);
     }
     catch (std::exception const &ex)
     {
-        std::cout << "ERROR: " << ex.what() << std::endl;
+        std::cerr << "failed to parse arguments: " << ex.what() << std::endl;
+        return -1;
     }
+
+    if (!parsed_arguments.messages.empty())
+    {
+        try
+        {
+            return main_hash_arguments(parsed_arguments);
+        }
+        catch (std::exception const &ex)
+        {
+            std::cout << "ERROR: " << ex.what() << std::endl;
+        }
+    }
+    else
+    {
+        test_suite();
+        std::cout << "\nTo compute the hash of a string please provide at least 1 argument.\n";
+        return 0;
+    }
+    // try
+    // {
+    // }
+    // catch (std::exception const &ex)
+    // {
+    //     std::cout << "ERROR: " << ex.what() << std::endl;
+    // }
     return -1;
 }
+
+/*
+ * SHA224("")
+ * 0x d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f
+ * SHA512/224("")
+ * 0x 6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4
+ * SHA512/256("")
+ * 0x c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a
+ */
