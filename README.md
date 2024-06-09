@@ -24,9 +24,13 @@ Important to note that `hash::digest()` does not modify the state and if needed 
 
 ## namespace `integer`
 
-### struct `uint128_t`
+### struct `extended_integer<Unit, UnitCount>`
 
-128-bit unsigned integer with most integer operations implemented. Intenally comprised of two 64-bit integers, stored with endianess that matches the host machine's architecture.
+An arbitrary precision unsigned integer. Comprised of multiple fundamental integer types, stored in contiguous space and with endianess that matches the host machine's architecture.
+
+Type `Unit`: the fundamental integer type that will be used
+
+Type `UnitCount`: the count of units that will be stored contiguously
 
 Operations supported:
 * All unsigned integer arithmetic operations (* / +)
@@ -40,7 +44,9 @@ Additional operations supported:
 Also because this integer adheres to the system's endianess, it can be loaded
 and dumped using `msd_utils/endian.hpp`.
 
-# Compile using cmake and conan
+This type will be further developed in the [utilities library](https://github.com/msd/cpp-utils).
+
+# Compile using cmake
 
 Assuming you have all requirements installed then just execute the following
 
@@ -48,6 +54,21 @@ Assuming you have all requirements installed then just execute the following
 mkdir build
 cd build
 cmake ../src
+cmake --build .
+```
+
+# Compile using cmake and conan
+
+To install the requirements using conan in the build folder run
+
+`conan install src --output-folder build --build=missing -pr:a mingw`
+
+To build run
+
+```bash
+mkdir build
+cd build
+cmake ../src -D CMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
 cmake --build .
 ```
 
