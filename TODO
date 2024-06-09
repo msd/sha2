@@ -1,5 +1,3 @@
-Implement sha512
-Implement sha384
 Implement sha512/256
 Implement sha512/224
 Implement sha224
@@ -8,3 +6,4 @@ Argument for taking in a file
 Take stdin as input if no arguments are given or if '-' is given as a file
 Separate executables for each algorithm
 Switch to pick which algorithm to perform
+Load file in chunks (currently loads the entire file at once)
