@@ -10,7 +10,7 @@
 
 #include "utils.hpp"
 
-namespace steve::integer
+namespace msd::integer
 {
     namespace impl
     {
@@ -789,6 +789,6 @@ namespace steve::integer
     };
 #pragma pack(pop)
     using uint128_t = extended_integer<uint64_t, 2>;
-} // namespace steve::integer
+} // namespace msd::integer
 
 #endif /* AE26D0F3_C377_468F_BAAB_B7EAC672FAB4 */

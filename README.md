@@ -12,6 +12,14 @@ Algorithms implemented:
 
 # Usage
 
+To compute the hash of a string just pass it as an argument
+
+`./mysha <message> <message2>...`
+
+This will print out the sha256 hash of each message
+
+# Documentation
+
 ## namespace `algorithms`
 
 contains all the algorithms in their individial sub-namespace. Each algorithm has a class called `hash` which is the main class that is used to calculate hashes. 
@@ -80,14 +88,6 @@ Requirements are listed in `conanfile.txt`
 If you want to install the requirements automatically using [conan](https://github.com/conan-io/conan)
 then run `conan-build.sh` (replace profile name in the script, if required). For windows users you should
 be able to just copy the commands one by one.
-
-# Run
-
-To compute the hash of a string just pass it as an argument
-
-`./mysha <message> <message2>...`
-
-This will print out the sha256 hash of each message
 
 # TODO
 

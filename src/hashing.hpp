@@ -16,7 +16,7 @@ template <std::integral Integer = int> Integer const constexpr SHA256_DIGEST_LEN
 template <std::integral Integer = int> Integer const constexpr SHA384_DIGEST_LEN = 48;
 template <std::integral Integer = int> Integer const constexpr SHA512_DIGEST_LEN = 64;
 
-namespace steve::algorithms
+namespace msd::algorithms
 {
     namespace sha2_details
     {
@@ -567,6 +567,6 @@ namespace steve::algorithms
         using hash = sha2_algo::sha512_algo;
     } // namespace sha512
 
-} // namespace steve::algorithms
+} // namespace msd::algorithms
 
 #endif /* C3F8C015_E7B0_4543_AB0C_6D83AD5DF3C2 */

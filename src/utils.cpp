@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace steve::bits
+namespace msd::bits
 {
     std::string read_file(std::string file_path)
     {
@@ -42,4 +42,4 @@ namespace steve::bits
 
         return bytes_read;
     }
-} // namespace steve::bits
+} // namespace msd::bits

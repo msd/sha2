@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace steve::bits
+namespace msd::bits
 {
     std::string read_file(std::string file_path);
 
@@ -125,6 +125,6 @@ namespace steve::bits
         return lines;
     }
 
-} // namespace steve::bits
+} // namespace msd::bits
 
 #endif /* B9B475FE_C6E6_4A9F_98B5_A506D530305D */

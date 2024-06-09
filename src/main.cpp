@@ -19,29 +19,29 @@ namespace fs = std::filesystem;
 struct multi_hash_result
 {
     std::vector<std::byte> data{};
-    steve::algorithms::sha256::digest_t sha_256{};
-    steve::algorithms::sha384::digest_t sha_384{};
-    steve::algorithms::sha512::digest_t sha_512{};
+    msd::algorithms::sha256::digest_t sha_256{};
+    msd::algorithms::sha384::digest_t sha_384{};
+    msd::algorithms::sha512::digest_t sha_512{};
 
     [[nodiscard]] std::string sha_256_string(unsigned split = 0) const
     {
-        return steve::bits::many_bytes_to_hex(sha_256, split);
+        return msd::bits::many_bytes_to_hex(sha_256, split);
     }
 
     [[nodiscard]] std::string sha_384_string(unsigned split = 0) const
     {
-        return steve::bits::many_bytes_to_hex(sha_384, split);
+        return msd::bits::many_bytes_to_hex(sha_384, split);
     }
 
     [[nodiscard]] std::string sha_512_string(unsigned split = 0) const
     {
-        return steve::bits::many_bytes_to_hex(sha_512, split);
+        return msd::bits::many_bytes_to_hex(sha_512, split);
     }
 };
 
 multi_hash_result multi_hash(std::vector<std::byte> data)
 {
-    using namespace steve::algorithms;
+    using namespace msd::algorithms;
 
     sha256::hash hash_256{};
     hash_256.update(data);
@@ -67,7 +67,7 @@ void test_suite()
 
     std::cout << "\tsha256\tsha348\tsha512\n";
 
-    static auto const constexpr expected = steve::bits::make_array<expected_data>(
+    static auto const constexpr expected = msd::bits::make_array<expected_data>(
         expected_data{
             .data = "",
             .sha_256 = "e3b0c44298fc1c149afbf4c8996fb924"
@@ -151,8 +151,8 @@ void test_suite()
 
 void hash_file(std::string_view file_path)
 {
-    using namespace steve::bits;
-    using namespace steve::algorithms;
+    using namespace msd::bits;
+    using namespace msd::algorithms;
 
     if (!fs::exists(file_path))
     {
@@ -216,7 +216,7 @@ static command_line_arguments parse_args(std::vector<std::string_view> args)
 /* calculates the hash of each of the given arguments */
 int main_hash_arguments(command_line_arguments const &arguments)
 {
-    using namespace steve::algorithms;
+    using namespace msd::algorithms;
 
     int i = 0;
     for (auto const &message : arguments.messages)
