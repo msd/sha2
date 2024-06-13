@@ -18,6 +18,12 @@ To compute the hash of a string just pass it as an argument
 
 This will print out the sha256 hash of each message
 
+# Building
+
+Requirements:
+* [catch2](https://conan.io/center/recipes/catch2?version=3.5.4) v3.5.4
+* [msd-cpp-utils](https://github.com/msd/cpp-utils) v0.0.4
+
 # Documentation
 
 ## namespace `algorithms`
